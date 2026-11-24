@@ -44,12 +44,29 @@
       border-bottom: 3px solid var(--brass);
       margin-bottom: 18px;
     }
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
     header h1 {
       font-family: Georgia, "Times New Roman", serif;
-      font-size: 1.25rem;
-      margin: 0 0 4px 0;
+      font-size: 1.22rem;
+      margin: 0;
       letter-spacing: 0.3px;
       color: #ffffff;
+    }
+    .header-star {
+      display: inline-block;
+      font-size: 1.2rem;
+      line-height: 1;
+      background: linear-gradient(180deg, #fde047 0%, #e5bc5c 50%, #b48a28 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55));
+      flex-shrink: 0;
     }
     header p {
       font-size: 0.78rem;
@@ -104,13 +121,29 @@
       background: var(--bg-parchment);
       border: 1.5px solid var(--border);
       color: var(--text-main);
-      padding: 12px 8px;
+      padding: 12px 6px;
       border-radius: 9px;
-      font-size: 0.86rem;
+      font-size: 0.85rem;
       font-weight: 700;
       text-align: center;
       cursor: pointer;
       transition: all 0.15s ease;
+    }
+    .choice-btn .btn-title {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .choice-btn .sel-star {
+      display: none;
+      color: var(--brass);
+      font-size: 0.92rem;
+      line-height: 1;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+    .choice-btn.active .sel-star {
+      display: inline-block;
     }
     .choice-btn small { display: block; font-weight: 500; font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
     .choice-btn.active {
@@ -139,7 +172,7 @@
     .toggle-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       background: var(--bg-parchment);
       padding: 10px 12px;
       border-radius: 9px;
@@ -149,7 +182,17 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .toggle-row input { width: 18px; height: 18px; accent-color: var(--crimson); }
+    .toggle-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--crimson); flex-shrink: 0; }
+    .diag-inline-input {
+      width: 72px !important;
+      padding: 4px 8px !important;
+      font-size: 0.92rem !important;
+      font-weight: 700;
+      background: #ffffff !important;
+      border: 1.5px solid var(--border) !important;
+      border-radius: 6px !important;
+      text-align: center;
+    }
 
     .primary-btn {
       width: 100%;
@@ -245,8 +288,12 @@
 </head>
 <body>
   <header>
-    <h1>Dominion Valley Contracting</h1>
-    <p>Field Estimator &amp; Value-Tier Calculator</p>
+    <div class="header-title-row">
+      <span class="header-star" aria-hidden="true">&#9733;</span>
+      <h1>Dominion Valley Contracting</h1>
+      <span class="header-star" aria-hidden="true">&#9733;</span>
+    </div>
+    <p>Field Estimator &amp; Audit Calculator</p>
   </header>
 
   <div class="container">
@@ -273,15 +320,15 @@
         </div>
         <div class="btn-group-3">
           <div class="choice-btn active" id="riskStandard" onclick="selectRisk('standard')">
-            Standard
+            <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>Standard</span>
             <small>+5% Labor Buffer</small>
           </div>
           <div class="choice-btn" id="riskTwoStory" onclick="selectRisk('two_story')">
-            2-Story / Tight
+            <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>2-Story / Tight</span>
             <small>+15% Labor Buffer</small>
           </div>
           <div class="choice-btn" id="riskRot" onclick="selectRisk('suspected_rot')">
-            Active Rot
+            <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>Active Rot</span>
             <small>+20% Labor Buffer</small>
           </div>
         </div>
@@ -311,12 +358,12 @@
         </div>
         <label class="toggle-row">
           <input type="checkbox" id="diagCreditCheck" />
-          <span>Credit $175 Paid Diagnostic Assessment toward deposit</span>
+          <span>Credit $<input type="number" id="diagAmountInput" class="diag-inline-input" inputmode="decimal" value="125" min="0" step="5" onclick="event.stopPropagation()" /> Diagnostic Fee toward deposit</span>
         </label>
-        <button class="primary-btn" onclick="calculateQuote(true)">Generate Good / Better Quote</button>
+        <button class="primary-btn" onclick="calculateQuote(true)">Calculate Quote</button>
       </div>
 
-      <!-- STEP 3: AUDIT & 2-OPTION OUTPUT -->
+      <!-- STEP 3: AUDIT & SINGLE QUOTE OUTPUT -->
       <div id="resultsSection" class="hidden">
         <div class="card">
           <span class="step-label" style="margin-bottom: 10px;">Step 3 — Line-by-Line Math Verification</span>
@@ -346,33 +393,29 @@
               <td>$650.00</td>
             </tr>
             <tr>
-              <td><strong>Option A: Core Repair (Pre-HST)</strong></td>
+              <td><strong>Estimate Subtotal (Pre-HST)</strong></td>
               <td id="audPreTax">$0.00</td>
             </tr>
             <tr>
-              <td>Option B: "Dry &amp; Solid" Upgrade (+15% Pre-HST)</td>
-              <td id="audUpgradePreTax">$0.00</td>
-            </tr>
-            <tr>
-              <td>NB HST (15% on Option A)</td>
+              <td>NB HST (15%)</td>
               <td id="audHst">$0.00</td>
             </tr>
             <tr class="total-row">
-              <td>Option A Total (Inc. HST)</td>
+              <td>Total Client Estimate (Inc. HST)</td>
               <td id="audTotalHst">$0.00</td>
             </tr>
           </table>
 
           <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
             <span id="cashBadge" class="badge badge-ok">Gross Margin: 0.0% ($0.00)</span>
-            <span id="rateBadge" class="badge badge-ok">Billed Labor Rate: $85.00/hr</span>
+            <span id="rateBadge" class="badge badge-ok">Billed Labor: $85.00/hr</span>
           </div>
         </div>
 
         <div class="card">
-          <span class="step-label" style="margin-bottom: 10px;">Client-Ready Joist Summary (2-Tier Value Anchor)</span>
+          <span class="step-label" style="margin-bottom: 10px;">Client-Ready Joist Summary &amp; Draw Schedule</span>
           <div id="joistOutput" class="joist-box"></div>
-          <button class="secondary-btn" id="copyBtn" onclick="copyJoistText()">Copy 2-Tier Summary for Joist</button>
+          <button class="secondary-btn" id="copyBtn" onclick="copyJoistText()">Copy Summary for Joist</button>
         </div>
       </div>
 
@@ -395,7 +438,7 @@
   </div>
 
   <script>
-    const ACCESS_PIN = "7777";
+    const ACCESS_PIN = "2468";
     const HISTORY_KEY = "dvc_quote_history_v1";
     let riskTier = "standard";
 
@@ -434,6 +477,7 @@
       document.getElementById("hoursInput").value = "";
       document.getElementById("subsInput").value = "";
       document.getElementById("diagCreditCheck").checked = false;
+      document.getElementById("diagAmountInput").value = "125";
       selectRisk("standard");
       document.getElementById("resultsSection").classList.add("hidden");
     }
@@ -447,6 +491,7 @@
       const hours = parseFloat(document.getElementById("hoursInput").value) || 0;
       const subs = parseFloat(document.getElementById("subsInput").value) || 0;
       const creditDiag = document.getElementById("diagCreditCheck").checked;
+      const diagFeeVal = parseFloat(document.getElementById("diagAmountInput").value) || 0;
       const scopeLabel = document.getElementById("jobScopeInput").value.trim() || "Exterior Structural Carpentry & Rot Remediation";
 
       // 1. Auto-scaled Material Markup
@@ -468,30 +513,24 @@
       const riskAdjustedLabor = baseLabor * (1 + risk.rate);
       const effectiveLaborRate = hours > 0 ? riskAdjustedLabor / hours : baseRate;
 
-      // 3. Option A Pre-HST (with $650 minimum service floor)
+      // 3. Pre-HST Total (with $650 minimum service floor)
       const rawSubtotal = markedMat + riskAdjustedLabor + subs;
       const minFloorApplied = rawSubtotal > 0 && rawSubtotal < 650;
-      const preTaxOptionA = rawSubtotal > 0 ? Math.max(650, rawSubtotal) : 0;
+      const preTaxTotal = rawSubtotal > 0 ? Math.max(650, rawSubtotal) : 0;
 
-      // 4. Option B ("Dry & Solid" Upgrade +15%)
-      const preTaxOptionB = preTaxOptionA * 1.15;
+      // 4. NB 15% HST & 50/30/20 Draws
+      const hst = preTaxTotal * 0.15;
+      const totalWithHst = preTaxTotal + hst;
 
-      // 5. NB 15% HST & 50/30/20 Draws
-      const hstA = preTaxOptionA * 0.15;
-      const totalOptionA = preTaxOptionA + hstA;
+      const diagCredit = creditDiag ? diagFeeVal : 0.0;
+      const draw50 = Math.max(0, (totalWithHst * 0.50) - diagCredit);
+      const draw30 = totalWithHst * 0.30;
+      const draw20 = totalWithHst * 0.20;
 
-      const hstB = preTaxOptionB * 0.15;
-      const totalOptionB = preTaxOptionB + hstB;
-
-      const diagCredit = creditDiag ? 175.0 : 0.0;
-      const draw50 = Math.max(0, (totalOptionA * 0.50) - diagCredit);
-      const draw30 = totalOptionA * 0.30;
-      const draw20 = totalOptionA * 0.20;
-
-      // 6. Fixed Gross Margin Math (Pre-HST Revenue minus Out-of-Pocket Materials & Subs)
+      // 5. Fixed Gross Margin Math (Pre-HST Revenue minus Out-of-Pocket Materials & Subs)
       const outOfPocketCosts = rawMat + subs;
-      const grossProfit = preTaxOptionA - outOfPocketCosts;
-      const grossMarginPct = preTaxOptionA > 0 ? (grossProfit / preTaxOptionA) * 100 : 0;
+      const grossProfit = preTaxTotal - outOfPocketCosts;
+      const grossMarginPct = preTaxTotal > 0 ? (grossProfit / preTaxTotal) * 100 : 0;
 
       // Update Audit Table
       document.getElementById("audRawMat").textContent = fmt(rawMat);
@@ -503,10 +542,9 @@
       document.getElementById("audRiskLabor").textContent = fmt(riskAdjustedLabor);
       document.getElementById("audSubs").textContent = fmt(subs);
       document.getElementById("minFloorRow").classList.toggle("hidden", !minFloorApplied);
-      document.getElementById("audPreTax").textContent = fmt(preTaxOptionA);
-      document.getElementById("audUpgradePreTax").textContent = fmt(preTaxOptionB);
-      document.getElementById("audHst").textContent = fmt(hstA);
-      document.getElementById("audTotalHst").textContent = fmt(totalOptionA);
+      document.getElementById("audPreTax").textContent = fmt(preTaxTotal);
+      document.getElementById("audHst").textContent = fmt(hst);
+      document.getElementById("audTotalHst").textContent = fmt(totalWithHst);
 
       // Update Badges
       const cashBadge = document.getElementById("cashBadge");
@@ -517,23 +555,16 @@
       rateBadge.textContent = `Billed Labor: ${fmt(effectiveLaborRate)}/hr`;
       rateBadge.className = "badge badge-ok";
 
-      const creditNote = creditDiag ? ` (includes -$175.00 Diagnostic Credit)` : ``;
+      const creditNote = creditDiag && diagCredit > 0 ? ` (includes -${fmt(diagCredit)} Diagnostic Credit)` : ``;
 
       const joistText =
 `${scopeLabel}
-========================================
-OPTION A — Structural Stabilization & Repair (Core Scope)
-• Pre-HST Estimate: ${fmt(preTaxOptionA)}
-• NB HST (15%): ${fmt(hstA)}
-• Total Investment: ${fmt(totalOptionA)}
+----------------------------------------
+Estimate Subtotal (Pre-HST): ${fmt(preTaxTotal)}
+NB HST (15%): ${fmt(hst)}
+Total Estimate (Inc. HST): ${fmt(totalWithHst)}
 
-OPTION B — "Dry & Solid" Complete Restoration (Recommended)
-Includes upgraded moisture-barrier flashing, structural hardware upgrade, & 5-Year Dry-Framing Workmanship Guarantee:
-• Pre-HST Estimate: ${fmt(preTaxOptionB)}
-• NB HST (15%): ${fmt(hstB)}
-• Total Investment: ${fmt(totalOptionB)}
-
-Payment Schedule (Based on Option A):
+Payment Schedule (50 / 30 / 20):
 • 50% Material & Scheduling Deposit: ${fmt(draw50)}${creditNote}
 • 30% Mid-Project Progress Draw: ${fmt(draw30)}
 • 20% Final Walkthrough Completion: ${fmt(draw20)}
@@ -545,7 +576,7 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
       document.getElementById("resultsSection").classList.remove("hidden");
       document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
 
-      if (saveToHistory && preTaxOptionA > 0) {
+      if (saveToHistory && preTaxTotal > 0) {
         saveQuoteHistory({
           label: scopeLabel,
           rawMat,
@@ -553,7 +584,8 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
           subs,
           riskTier,
           creditDiag,
-          totalOptionA
+          diagFeeVal,
+          totalWithHst
         });
       }
     }
@@ -577,9 +609,10 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
       card.classList.remove("hidden");
       list.innerHTML = "";
       history.forEach((item, idx) => {
+        const displayTotal = item.totalWithHst !== undefined ? item.totalWithHst : (item.totalOptionA || 0);
         const div = document.createElement("div");
         div.className = "history-item";
-        div.innerHTML = `<div><strong>${item.label}</strong><br><small style="color:#4b5563;">Mat: ${fmt(item.rawMat)} | ${item.hours} hrs</small></div><span>${fmt(item.totalOptionA)}</span>`;
+        div.innerHTML = `<div><strong>${item.label}</strong><br><small style="color:#4b5563;">Mat: ${fmt(item.rawMat)} | ${item.hours} hrs</small></div><span>${fmt(displayTotal)}</span>`;
         div.onclick = () => loadQuote(idx);
         list.appendChild(div);
       });
@@ -594,6 +627,7 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
       document.getElementById("hoursInput").value = item.hours;
       document.getElementById("subsInput").value = item.subs;
       document.getElementById("diagCreditCheck").checked = item.creditDiag;
+      document.getElementById("diagAmountInput").value = item.diagFeeVal !== undefined ? item.diagFeeVal : 125;
       selectRisk(item.riskTier);
       calculateQuote(false);
     }
@@ -607,8 +641,8 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
       const text = document.getElementById("joistOutput").textContent;
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById("copyBtn");
-        btn.textContent = "Copied 2-Tier Summary!";
-        setTimeout(() => { btn.textContent = "Copy 2-Tier Summary for Joist"; }, 2000);
+        btn.textContent = "Copied Summary!";
+        setTimeout(() => { btn.textContent = "Copy Summary for Joist"; }, 2000);
       });
     }
   </script>

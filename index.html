@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVC Field Quote" />
+  <title>Dominion Valley Contracting — Field Quoting Portal</title>
+  <style>
+    :root {
+      /* Matched to Dominion Valley Contracting Website Palette */
+      --bg-parchment: #f6f4ef;
+      --card-white: #ffffff;
+      --navy-deep: #102038;
+      --navy-mid: #182c4c;
+      --crimson: #991b1b;
+      --crimson-hover: #7f1d1d;
+      --brass: #e5bc5c;
+      --brass-dark: #b48a28;
+      --green-forest: #15803d;
+      --green-soft: #dcfce7;
+      --amber-soft: #fef3c7;
+      --amber-text: #92400e;
+      --border: #dcd6c8;
+      --text-main: #102038;
+      --text-muted: #4b5563;
+      --red-error: #dc2626;
+    }
+
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      margin: 0;
+      padding: 0 0 48px 0;
+      background: var(--bg-parchment);
+      color: var(--text-main);
+      line-height: 1.45;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Maritime Navy Header with Brass Bottom Border */
+    header {
+      background: var(--navy-deep);
+      color: #ffffff;
+      text-align: center;
+      padding: 18px 16px 16px 16px;
+      border-bottom: 3px solid var(--brass);
+      margin-bottom: 18px;
+    }
+    header h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.25rem;
+      margin: 0 0 4px 0;
+      letter-spacing: 0.3px;
+      color: #ffffff;
+    }
+    header p {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      color: var(--brass);
+      margin: 0;
+    }
+
+    .container { max-width: 540px; margin: 0 auto; padding: 0 16px; }
+
+    .card {
+      background: var(--card-white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 6px rgba(16, 32, 56, 0.05);
+    }
+
+    .step-label {
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      color: var(--crimson);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .btn-group-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    .choice-btn {
+      background: var(--bg-parchment);
+      border: 1.5px solid var(--border);
+      color: var(--text-main);
+      padding: 12px 10px;
+      border-radius: 9px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .choice-btn small { display: block; font-weight: 500; font-size: 0.73rem; color: var(--text-muted); margin-top: 3px; }
+    .choice-btn.active {
+      border-color: var(--navy-deep);
+      background: var(--navy-deep);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(16, 32, 56, 0.2);
+    }
+    .choice-btn.active small { color: var(--brass); }
+
+    .input-row { margin-bottom: 12px; }
+    .input-row:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 0.84rem; color: var(--text-main); margin-bottom: 4px; font-weight: 600; }
+    input[type="number"], input[type="password"], input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.05rem;
+      background: var(--bg-parchment);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      color: var(--text-main);
+      outline: none;
+    }
+    input:focus { border-color: var(--navy-mid); background: #ffffff; }
+
+    /* Heritage Crimson Primary CTA */
+    .primary-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 9px;
+      background: var(--crimson);
+      color: #ffffff;
+      cursor: pointer;
+      margin-top: 4px;
+      box-shadow: 0 3px 8px rgba(153, 27, 27, 0.25);
+    }
+    .primary-btn:active { background: var(--crimson-hover); }
+
+    /* Forest Green Secondary Action */
+    .secondary-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 1.5px solid var(--green-forest);
+      border-radius: 9px;
+      background: var(--green-forest);
+      color: #ffffff;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .secondary-btn:active { opacity: 0.9; }
+
+    /* Audit Table */
+    .audit-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .audit-table td { padding: 8px 0; border-bottom: 1px solid #ece7dc; color: var(--text-main); }
+    .audit-table td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .audit-table tr.total-row td {
+      border-top: 2px solid var(--navy-deep);
+      border-bottom: none;
+      padding-top: 11px;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--crimson);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .badge-ok { background: var(--green-soft); color: var(--green-forest); border: 1px solid rgba(21, 128, 61, 0.25); }
+    .badge-warn { background: var(--amber-soft); color: var(--amber-text); border: 1px solid rgba(146, 64, 14, 0.25); }
+
+    .joist-box {
+      background: var(--navy-deep);
+      border: 1.5px solid var(--brass);
+      border-radius: 9px;
+      padding: 14px;
+      font-size: 0.83rem;
+      white-space: pre-wrap;
+      color: #f8fafc;
+    }
+
+    /* Four-Stripe Scarf Border matching the main site */
+    .scarf-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      height: 6px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    .scarf-green { background: #15803d; }
+    .scarf-red   { background: #dc2626; }
+    .scarf-gold  { background: #eab308; }
+    .scarf-navy  { background: #1e3a8a; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dominion Valley Contracting</h1>
+    <p>Field Estimator &amp; Audit Calculator</p>
+  </header>
+
+  <div class="container">
+    <!-- PIN GATE -->
+    <div id="pinScreen" class="card">
+      <span class="step-label">Crew Access Gate</span>
+      <div class="input-row">
+        <label for="pinInput">Enter 4-Digit Crew PIN</label>
+        <input type="password" id="pinInput" inputmode="numeric" maxlength="6" placeholder="••••" />
+      </div>
+      <button class="primary-btn" onclick="unlockApp()">Unlock Field Calculator</button>
+      <p id="pinError" style="color: var(--red-error); font-size: 0.82rem; font-weight: 600; margin: 8px 0 0 0;" class="hidden">
+        Incorrect PIN. Try again.
+      </p>
+    </div>
+
+    <!-- MAIN CALCULATOR -->
+    <div id="appScreen" class="hidden">
+      <!-- STEP 1: JOB PROFILE -->
+      <div class="card">
+        <span class="step-label">Step 1 — Job Profile</span>
+        <div class="btn-group">
+          <div class="choice-btn active" id="btnRemediation" onclick="selectJobType('remediation')">
+            Labor-Heavy
+            <small>Rot Remediation / Repair (18% Mat.)</small>
+          </div>
+          <div class="choice-btn" id="btnNewBuild" onclick="selectJobType('new_build')">
+            Material-Heavy
+            <small>Deck / Framing (15% Mat. ≥$3k)</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: SITE RISK -->
+      <div class="card">
+        <span class="step-label">Step 2 — Site Access &amp; Risk Tier</span>
+        <div class="btn-group-3">
+          <div class="choice-btn active" id="riskStandard" onclick="selectRisk('standard')">
+            Standard
+            <small>+3% Buffer</small>
+          </div>
+          <div class="choice-btn" id="riskTwoStory" onclick="selectRisk('two_story')">
+            2-Story / Ladder
+            <small>+12.5% Buffer</small>
+          </div>
+          <div class="choice-btn" id="riskRot" onclick="selectRisk('suspected_rot')">
+            Suspected Rot
+            <small>+17.5% Buffer</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: RAW NUMBERS -->
+      <div class="card">
+        <span class="step-label">Step 3 — Site Inputs (CAD)</span>
+        <div class="input-row">
+          <label for="jobScopeInput">Brief Job Label (Optional, for Joist copy-paste)</label>
+          <input type="text" id="jobScopeInput" placeholder="e.g., Rear Deck Ledger &amp; Joist Remediation" />
+        </div>
+        <div class="input-row">
+          <label for="materialsInput">Raw Materials Cost ($ before markup)</label>
+          <input type="number" id="materialsInput" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        <div class="input-row">
+          <label for="hoursInput">Estimated Total Crew Hours (on site)</label>
+          <input type="number" id="hoursInput" inputmode="decimal" step="0.5" min="0" placeholder="0.0" />
+        </div>
+        <div class="input-row">
+          <label for="subsInput">Subcontractor Quotes ($ — leave 0 if none)</label>
+          <input type="number" id="subsInput" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        <button class="primary-btn" onclick="calculateQuote()">Calculate Transparent Ballpark</button>
+      </div>
+
+      <!-- RESULTS & AUDIT LEDGER -->
+      <div id="resultsSection" class="hidden">
+        <div class="card">
+          <span class="step-label">Step 4 — Line-by-Line Math Verification</span>
+          <table class="audit-table">
+            <tr>
+              <td>Raw Materials</td>
+              <td id="audRawMat">$0.00</td>
+            </tr>
+            <tr>
+              <td id="audMatMarkupLabel">Materials + Markup (18%)</td>
+              <td id="audMarkedMat">$0.00</td>
+            </tr>
+            <tr>
+              <td id="audLaborLabel">Base Crew Labor (0 hrs × $60/hr)</td>
+              <td id="audLabor">$0.00</td>
+            </tr>
+            <tr>
+              <td>Subcontractors</td>
+              <td id="audSubs">$0.00</td>
+            </tr>
+            <tr>
+              <td><strong>Direct Cost Subtotal</strong></td>
+              <td id="audDirect">$0.00</td>
+            </tr>
+            <tr>
+              <td id="audRiskLabel">Risk Buffer (+3%)</td>
+              <td id="audRiskAdjusted">$0.00</td>
+            </tr>
+            <tr>
+              <td>Overhead &amp; Profit Multiplier (× 1.38)</td>
+              <td id="audPreTax">$0.00</td>
+            </tr>
+            <tr>
+              <td>NB HST (15%)</td>
+              <td id="audHst">$0.00</td>
+            </tr>
+            <tr class="total-row">
+              <td>Total Client Ballpark (Inc. HST)</td>
+              <td id="audTotalHst">$0.00</td>
+            </tr>
+          </table>
+
+          <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <span id="marginBadge" class="badge badge-ok">Gross Margin: 0.0%</span>
+            <span id="yieldBadge" class="badge badge-ok">Effective Yield: $0.00/hr</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="step-label">Client-Ready Joist Summary &amp; Draw Schedule</span>
+          <div id="joistOutput" class="joist-box"></div>
+          <button class="secondary-btn" id="copyBtn" onclick="copyJoistText()">Copy Summary for Joist</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scarf-bar">
+      <div class="scarf-green"></div>
+      <div class="scarf-red"></div>
+      <div class="scarf-gold"></div>
+      <div class="scarf-navy"></div>
+    </div>
+  </div>
+
+  <script>
+    // CHANGE THIS PIN BEFORE PUBLISHING
+    const ACCESS_PIN = "7777";
+
+    let jobCategory = "remediation";
+    let riskTier = "standard";
+
+    // Auto-unlock if previously unlocked on this device
+    if (localStorage.getItem("dvc_unlocked") === ACCESS_PIN) {
+      document.getElementById("pinScreen").classList.add("hidden");
+      document.getElementById("appScreen").classList.remove("hidden");
+    }
+
+    function unlockApp() {
+      const entered = document.getElementById("pinInput").value.trim();
+      if (entered === ACCESS_PIN) {
+        localStorage.setItem("dvc_unlocked", ACCESS_PIN);
+        document.getElementById("pinScreen").classList.add("hidden");
+        document.getElementById("appScreen").classList.remove("hidden");
+      } else {
+        document.getElementById("pinError").classList.remove("hidden");
+      }
+    }
+
+    document.getElementById("pinInput").addEventListener("keyup", function(e) {
+      if (e.key === "Enter") unlockApp();
+    });
+
+    function selectJobType(type) {
+      jobCategory = type;
+      document.getElementById("btnRemediation").classList.toggle("active", type === "remediation");
+      document.getElementById("btnNewBuild").classList.toggle("active", type === "new_build");
+    }
+
+    function selectRisk(tier) {
+      riskTier = tier;
+      document.getElementById("riskStandard").classList.toggle("active", tier === "standard");
+      document.getElementById("riskTwoStory").classList.toggle("active", tier === "two_story");
+      document.getElementById("riskRot").classList.toggle("active", tier === "suspected_rot");
+    }
+
+    function fmt(num) {
+      return "$" + num.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function calculateQuote() {
+      const rawMat = parseFloat(document.getElementById("materialsInput").value) || 0;
+      const hours = parseFloat(document.getElementById("hoursInput").value) || 0;
+      const subs = parseFloat(document.getElementById("subsInput").value) || 0;
+      const scopeLabel = document.getElementById("jobScopeInput").value.trim() || "Scope of Work — Exterior Carpentry / Remediation";
+
+      // 1. Material Markup (15% on material-heavy new builds >= $3,000, otherwise 18%)
+      const matMarkupRate = (jobCategory === "new_build" && rawMat >= 3000) ? 0.15 : 0.18;
+      const markedMat = rawMat * (1 + matMarkupRate);
+
+      // 2. Base Crew Labor ($60/hr internal baseline)
+      const baseLaborRate = 60.0;
+      const laborCost = hours * baseLaborRate;
+
+      // 3. Direct Cost Subtotal
+      const directSubtotal = markedMat + laborCost + subs;
+
+      // 4. Risk Buffer Multiplier
+      const riskConfig = {
+        standard: { label: "Standard Access (+3%)", rate: 0.03 },
+        two_story: { label: "2-Story / Ladder (+12.5%)", rate: 0.125 },
+        suspected_rot: { label: "Suspected / Active Rot (+17.5%)", rate: 0.175 }
+      };
+      const risk = riskConfig[riskTier];
+      const riskAdjusted = directSubtotal * (1 + risk.rate);
+
+      // 5. Overhead & Profit (1.38x = 15% overhead + 15% net profit)
+      const preTaxQuote = riskAdjusted * 1.38;
+
+      // 6. Guardrail Metrics
+      const rawDirectCost = rawMat + laborCost + subs;
+      const grossMargin = preTaxQuote > 0 ? ((preTaxQuote - rawDirectCost) / preTaxQuote) * 100 : 0;
+      const effectiveYield = hours > 0 ? (preTaxQuote - markedMat - subs) / hours : 0;
+
+      // 7. NB 15% HST & 50/30/20 Draw Schedule
+      const hst = preTaxQuote * 0.15;
+      const totalWithHst = preTaxQuote + hst;
+      const draw50 = totalWithHst * 0.50;
+      const draw30 = totalWithHst * 0.30;
+      const draw20 = totalWithHst * 0.20;
+
+      // Populate Audit Table
+      document.getElementById("audRawMat").textContent = fmt(rawMat);
+      document.getElementById("audMatMarkupLabel").textContent = `Materials × ${(1 + matMarkupRate).toFixed(2)} (${Math.round(matMarkupRate * 100)}% markup)`;
+      document.getElementById("audMarkedMat").textContent = fmt(markedMat);
+      document.getElementById("audLaborLabel").textContent = `Base Crew Labor (${hours} hrs × $60/hr)`;
+      document.getElementById("audLabor").textContent = fmt(laborCost);
+      document.getElementById("audSubs").textContent = fmt(subs);
+      document.getElementById("audDirect").textContent = fmt(directSubtotal);
+      document.getElementById("audRiskLabel").textContent = `Risk Buffer: ${risk.label}`;
+      document.getElementById("audRiskAdjusted").textContent = fmt(riskAdjusted);
+      document.getElementById("audPreTax").textContent = `${fmt(preTaxQuote)} (Pre-HST)`;
+      document.getElementById("audHst").textContent = fmt(hst);
+      document.getElementById("audTotalHst").textContent = fmt(totalWithHst);
+
+      // Guardrail Badges
+      const marginBadge = document.getElementById("marginBadge");
+      marginBadge.textContent = `Gross Margin: ${grossMargin.toFixed(1)}% (Target 40–50%)`;
+      marginBadge.className = "badge " + (grossMargin >= 40 ? "badge-ok" : "badge-warn");
+
+      const yieldBadge = document.getElementById("yieldBadge");
+      yieldBadge.textContent = `Effective Yield: ${fmt(effectiveYield)}/hr (Target $80+)`;
+      yieldBadge.className = "badge " + (effectiveYield >= 80 ? "badge-ok" : "badge-warn");
+
+      // Joist Copy-Paste Text
+      const joistText =
+`${scopeLabel}
+----------------------------------------
+Ballpark Estimate (Pre-HST): ${fmt(preTaxQuote)}
+NB HST (15%): ${fmt(hst)}
+Total Estimate (Inc. HST): ${fmt(totalWithHst)}
+
+Payment Schedule (50 / 30 / 20):
+• 50% Deposit upon acceptance: ${fmt(draw50)}
+• 30% Mid-project progress draw: ${fmt(draw30)}
+• 20% Upon final completion: ${fmt(draw20)}
+
+Hidden-Rot Protection Clause:
+Any concealed structural rot or framing damage discovered after tear-out is excluded from this estimate and will be billed at $80/hr T&M plus materials + 18% markup upon client approval.`;
+
+      document.getElementById("joistOutput").textContent = joistText;
+      document.getElementById("resultsSection").classList.remove("hidden");
+      document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function copyJoistText() {
+      const text = document.getElementById("joistOutput").textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById("copyBtn");
+        btn.textContent = "Copied to Clipboard!";
+        setTimeout(() => { btn.textContent = "Copy Summary for Joist"; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

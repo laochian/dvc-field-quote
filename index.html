@@ -9,7 +9,6 @@
   <title>Dominion Valley Contracting — Field Quoting Portal</title>
   <style>
     :root {
-      /* Matched to Dominion Valley Contracting Website Palette */
       --bg-parchment: #f6f4ef;
       --card-white: #ffffff;
       --navy-deep: #102038;
@@ -17,7 +16,6 @@
       --crimson: #991b1b;
       --crimson-hover: #7f1d1d;
       --brass: #e5bc5c;
-      --brass-dark: #b48a28;
       --green-forest: #15803d;
       --green-soft: #dcfce7;
       --amber-soft: #fef3c7;
@@ -38,7 +36,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Maritime Navy Header with Brass Bottom Border */
     header {
       background: var(--navy-deep);
       color: #ffffff;
@@ -123,7 +120,6 @@
     }
     input:focus { border-color: var(--navy-mid); background: #ffffff; }
 
-    /* Heritage Crimson Primary CTA */
     .primary-btn {
       width: 100%;
       padding: 14px;
@@ -139,7 +135,6 @@
     }
     .primary-btn:active { background: var(--crimson-hover); }
 
-    /* Forest Green Secondary Action */
     .secondary-btn {
       width: 100%;
       padding: 12px;
@@ -154,7 +149,6 @@
     }
     .secondary-btn:active { opacity: 0.9; }
 
-    /* Audit Table */
     .audit-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
     .audit-table td { padding: 8px 0; border-bottom: 1px solid #ece7dc; color: var(--text-main); }
     .audit-table td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -187,7 +181,6 @@
       color: #f8fafc;
     }
 
-    /* Four-Stripe Scarf Border matching the main site */
     .scarf-bar {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -228,22 +221,22 @@
     <div id="appScreen" class="hidden">
       <!-- STEP 1: JOB PROFILE -->
       <div class="card">
-        <span class="step-label">Step 1 — Job Profile</span>
+        <span class="step-label">Step 1 — Material Markup Tier</span>
         <div class="btn-group">
           <div class="choice-btn active" id="btnRemediation" onclick="selectJobType('remediation')">
-            Labor-Heavy
-            <small>Rot Remediation / Repair (18% Mat.)</small>
+            Repair / Small Run
+            <small>18% Material Markup</small>
           </div>
           <div class="choice-btn" id="btnNewBuild" onclick="selectJobType('new_build')">
-            Material-Heavy
-            <small>Deck / Framing (15% Mat. ≥$3k)</small>
+            Large Build (≥$3k Mat.)
+            <small>15% Material Markup</small>
           </div>
         </div>
       </div>
 
       <!-- STEP 2: SITE RISK -->
       <div class="card">
-        <span class="step-label">Step 2 — Site Access &amp; Risk Tier</span>
+        <span class="step-label">Step 2 — Site Access &amp; Contingency Buffer</span>
         <div class="btn-group-3">
           <div class="choice-btn active" id="riskStandard" onclick="selectRisk('standard')">
             Standard
@@ -272,7 +265,7 @@
           <input type="number" id="materialsInput" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
         </div>
         <div class="input-row">
-          <label for="hoursInput">Estimated Total Crew Hours (on site)</label>
+          <label for="hoursInput">Total Man-Hours (1 person × hrs, or 2 people × hrs @ $85/hr)</label>
           <input type="number" id="hoursInput" inputmode="decimal" step="0.5" min="0" placeholder="0.0" />
         </div>
         <div class="input-row">
@@ -296,7 +289,7 @@
               <td id="audMarkedMat">$0.00</td>
             </tr>
             <tr>
-              <td id="audLaborLabel">Base Crew Labor (0 hrs × $60/hr)</td>
+              <td id="audLaborLabel">Crew Labor (0 man-hrs × $85/hr)</td>
               <td id="audLabor">$0.00</td>
             </tr>
             <tr>
@@ -304,15 +297,11 @@
               <td id="audSubs">$0.00</td>
             </tr>
             <tr>
-              <td><strong>Direct Cost Subtotal</strong></td>
+              <td><strong>Subtotal (Materials + Labor + Subs)</strong></td>
               <td id="audDirect">$0.00</td>
             </tr>
             <tr>
-              <td id="audRiskLabel">Risk Buffer (+3%)</td>
-              <td id="audRiskAdjusted">$0.00</td>
-            </tr>
-            <tr>
-              <td>Overhead &amp; Profit Multiplier (× 1.38)</td>
+              <td id="audRiskLabel">Contingency Buffer (+3%)</td>
               <td id="audPreTax">$0.00</td>
             </tr>
             <tr>
@@ -326,8 +315,8 @@
           </table>
 
           <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-            <span id="marginBadge" class="badge badge-ok">Gross Margin: 0.0%</span>
-            <span id="yieldBadge" class="badge badge-ok">Effective Yield: $0.00/hr</span>
+            <span id="marginBadge" class="badge badge-ok">Est. Gross Margin: 0.0%</span>
+            <span id="yieldBadge" class="badge badge-ok">Effective Rate: $85.00/hr</span>
           </div>
         </div>
 
@@ -354,7 +343,6 @@
     let jobCategory = "remediation";
     let riskTier = "standard";
 
-    // Auto-unlock if previously unlocked on this device
     if (localStorage.getItem("dvc_unlocked") === ACCESS_PIN) {
       document.getElementById("pinScreen").classList.add("hidden");
       document.getElementById("appScreen").classList.remove("hidden");
@@ -398,35 +386,35 @@
       const subs = parseFloat(document.getElementById("subsInput").value) || 0;
       const scopeLabel = document.getElementById("jobScopeInput").value.trim() || "Scope of Work — Exterior Carpentry / Remediation";
 
-      // 1. Material Markup (15% on material-heavy new builds >= $3,000, otherwise 18%)
+      // 1. Material Markup (15% on large builds >= $3,000, otherwise 18%)
       const matMarkupRate = (jobCategory === "new_build" && rawMat >= 3000) ? 0.15 : 0.18;
       const markedMat = rawMat * (1 + matMarkupRate);
 
-      // 2. Base Crew Labor ($60/hr internal baseline)
-      const baseLaborRate = 60.0;
-      const laborCost = hours * baseLaborRate;
+      // 2. Direct Client Billing Labor Rate ($85/man-hour)
+      const clientLaborRate = 85.0;
+      const internalCostRate = 60.0;
+      const laborBilled = hours * clientLaborRate;
+      const laborInternalCost = hours * internalCostRate;
 
-      // 3. Direct Cost Subtotal
-      const directSubtotal = markedMat + laborCost + subs;
+      // 3. Subtotal
+      const subtotal = markedMat + laborBilled + subs;
 
-      // 4. Risk Buffer Multiplier
+      // 4. Site Contingency / Risk Buffer
       const riskConfig = {
         standard: { label: "Standard Access (+3%)", rate: 0.03 },
         two_story: { label: "2-Story / Ladder (+12.5%)", rate: 0.125 },
         suspected_rot: { label: "Suspected / Active Rot (+17.5%)", rate: 0.175 }
       };
       const risk = riskConfig[riskTier];
-      const riskAdjusted = directSubtotal * (1 + risk.rate);
+      const preTaxQuote = subtotal * (1 + risk.rate);
 
-      // 5. Overhead & Profit (1.38x = 15% overhead + 15% net profit)
-      const preTaxQuote = riskAdjusted * 1.38;
+      // 5. Internal Profit & Effective Hourly Rate Check
+      const rawDirectCost = rawMat + laborInternalCost + subs;
+      const grossProfit = preTaxQuote - rawDirectCost;
+      const grossMarginPct = preTaxQuote > 0 ? (grossProfit / preTaxQuote) * 100 : 0;
+      const effectiveRate = hours > 0 ? (preTaxQuote - markedMat - subs) / hours : 0;
 
-      // 6. Guardrail Metrics
-      const rawDirectCost = rawMat + laborCost + subs;
-      const grossMargin = preTaxQuote > 0 ? ((preTaxQuote - rawDirectCost) / preTaxQuote) * 100 : 0;
-      const effectiveYield = hours > 0 ? (preTaxQuote - markedMat - subs) / hours : 0;
-
-      // 7. NB 15% HST & 50/30/20 Draw Schedule
+      // 6. NB 15% HST & 50/30/20 Draw Schedule
       const hst = preTaxQuote * 0.15;
       const totalWithHst = preTaxQuote + hst;
       const draw50 = totalWithHst * 0.50;
@@ -437,24 +425,23 @@
       document.getElementById("audRawMat").textContent = fmt(rawMat);
       document.getElementById("audMatMarkupLabel").textContent = `Materials × ${(1 + matMarkupRate).toFixed(2)} (${Math.round(matMarkupRate * 100)}% markup)`;
       document.getElementById("audMarkedMat").textContent = fmt(markedMat);
-      document.getElementById("audLaborLabel").textContent = `Base Crew Labor (${hours} hrs × $60/hr)`;
-      document.getElementById("audLabor").textContent = fmt(laborCost);
+      document.getElementById("audLaborLabel").textContent = `Crew Labor (${hours} man-hrs × $85/hr)`;
+      document.getElementById("audLabor").textContent = fmt(laborBilled);
       document.getElementById("audSubs").textContent = fmt(subs);
-      document.getElementById("audDirect").textContent = fmt(directSubtotal);
-      document.getElementById("audRiskLabel").textContent = `Risk Buffer: ${risk.label}`;
-      document.getElementById("audRiskAdjusted").textContent = fmt(riskAdjusted);
+      document.getElementById("audDirect").textContent = fmt(subtotal);
+      document.getElementById("audRiskLabel").textContent = `Contingency: ${risk.label}`;
       document.getElementById("audPreTax").textContent = `${fmt(preTaxQuote)} (Pre-HST)`;
       document.getElementById("audHst").textContent = fmt(hst);
       document.getElementById("audTotalHst").textContent = fmt(totalWithHst);
 
       // Guardrail Badges
       const marginBadge = document.getElementById("marginBadge");
-      marginBadge.textContent = `Gross Margin: ${grossMargin.toFixed(1)}% (Target 40–50%)`;
-      marginBadge.className = "badge " + (grossMargin >= 40 ? "badge-ok" : "badge-warn");
+      marginBadge.textContent = `Gross Margin: ${grossMarginPct.toFixed(1)}% (${fmt(grossProfit)})`;
+      marginBadge.className = "badge " + (grossMarginPct >= 28 ? "badge-ok" : "badge-warn");
 
       const yieldBadge = document.getElementById("yieldBadge");
-      yieldBadge.textContent = `Effective Yield: ${fmt(effectiveYield)}/hr (Target $80+)`;
-      yieldBadge.className = "badge " + (effectiveYield >= 80 ? "badge-ok" : "badge-warn");
+      yieldBadge.textContent = `Effective Rate: ${fmt(effectiveRate)}/hr`;
+      yieldBadge.className = "badge " + (effectiveRate >= 85 ? "badge-ok" : "badge-warn");
 
       // Joist Copy-Paste Text
       const joistText =
@@ -470,7 +457,7 @@ Payment Schedule (50 / 30 / 20):
 • 20% Upon final completion: ${fmt(draw20)}
 
 Hidden-Rot Protection Clause:
-Any concealed structural rot or framing damage discovered after tear-out is excluded from this estimate and will be billed at $80/hr T&M plus materials + 18% markup upon client approval.`;
+Any concealed structural rot or framing damage discovered after tear-out is excluded from this estimate and will be billed at $85/hr T&M plus materials + 18% markup upon client approval.`;
 
       document.getElementById("joistOutput").textContent = joistText;
       document.getElementById("resultsSection").classList.remove("hidden");

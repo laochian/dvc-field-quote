@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="DVC Field Quote" />
-  <title>Dominion Valley Contracting — Field Quoting Portal</title>
+  <title>Dominion Valley Contracting — Field Estimator</title>
   <style>
     :root {
       --bg-parchment: #f6f4ef;
@@ -115,15 +115,16 @@
       padding: 0;
     }
 
+    .btn-group-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .btn-group-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
     .choice-btn {
       background: var(--bg-parchment);
       border: 1.5px solid var(--border);
       color: var(--text-main);
-      padding: 12px 6px;
+      padding: 12px 8px;
       border-radius: 9px;
-      font-size: 0.85rem;
+      font-size: 0.86rem;
       font-weight: 700;
       text-align: center;
       cursor: pointer;
@@ -225,6 +226,13 @@
     .audit-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
     .audit-table td { padding: 8px 0; border-bottom: 1px solid #ece7dc; color: var(--text-main); }
     .audit-table td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .audit-table tr.addon-row td { color: var(--text-muted); font-size: 0.83rem; padding-left: 12px; }
+    .audit-table tr.addon-row td:last-child { color: var(--green-forest); }
+    .audit-table tr.subtotal-row td {
+      border-top: 1.5px solid var(--border);
+      padding-top: 10px;
+      font-weight: 700;
+    }
     .audit-table tr.total-row td {
       border-top: 2px solid var(--navy-deep);
       border-bottom: none;
@@ -312,12 +320,27 @@
 
     <!-- MAIN CALCULATOR -->
     <div id="appScreen" class="hidden">
-      <!-- STEP 1: SITE ACCESS & LABOR COMPLEXITY -->
+      <!-- STEP 1: CONTRACT TYPE (T&M vs FIXED PRICE) -->
       <div class="card">
         <div class="step-header">
-          <span class="step-label">Step 1 — Labor Complexity &amp; Access</span>
+          <span class="step-label">Step 1 — Contract Structure</span>
           <button class="clear-link" onclick="resetForm()">Clear / New Quote</button>
         </div>
+        <div class="btn-group-2">
+          <div class="choice-btn active" id="modeTM" onclick="selectBillingMode('tm')">
+            <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>Time &amp; Materials</span>
+            <small>Rot / Tear-Out ($85/hr Flat)</small>
+          </div>
+          <div class="choice-btn" id="modeFixed" onclick="selectBillingMode('fixed')">
+            <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>Fixed Price</span>
+            <small>Decks / Roofs / Builds (Lump Sum)</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 (CONDITIONAL): ONLY SHOWN FOR FIXED PRICE JOBS -->
+      <div id="complexityCard" class="card hidden">
+        <span class="step-label" style="margin-bottom: 10px;">Step 2 — Fixed-Price Site Complexity Buffer</span>
         <div class="btn-group-3">
           <div class="choice-btn active" id="riskStandard" onclick="selectRisk('standard')">
             <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>Standard</span>
@@ -327,22 +350,26 @@
             <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>2-Story / Tight</span>
             <small>+15% Labor Buffer</small>
           </div>
-          <div class="choice-btn" id="riskRot" onclick="selectRisk('suspected_rot')">
-            <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>Active Rot</span>
+          <div class="choice-btn" id="riskComplex" onclick="selectRisk('complex')">
+            <span class="btn-title"><span class="sel-star" aria-hidden="true">&#9733;</span>Heavy / Steep</span>
             <small>+20% Labor Buffer</small>
           </div>
         </div>
         <p style="font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 0 0;">
-          Material markup auto-scales by order size (20% &lt;$1.5k | 18% $1.5k–$3.9k | 15% $4k+).
+          Protects your fixed price against staging, ladder, or pitch slowdowns (hidden inside lump sum).
         </p>
       </div>
 
-      <!-- STEP 2: SITE INPUTS -->
+      <!-- STEP 2 / 3: SITE INPUTS -->
       <div class="card">
-        <span class="step-label" style="margin-bottom: 10px;">Step 2 — Site Inputs (CAD)</span>
+        <span class="step-label" id="inputsStepLabel" style="margin-bottom: 10px;">Step 2 — Job Inputs (CAD)</span>
         <div class="input-row">
           <label for="jobScopeInput">Brief Job Label (for Joist Summary)</label>
-          <input type="text" id="jobScopeInput" placeholder="e.g., Rear Deck Ledger &amp; Rim Joist Restoration" />
+          <input type="text" id="jobScopeInput" placeholder="e.g., Rear Deck Ledger &amp; Rim Joist Remediation" />
+        </div>
+        <div class="input-row">
+          <label for="durationInput">Estimated On-Site Timeline (Optional)</label>
+          <input type="text" id="durationInput" placeholder="e.g., 3–4 working days" />
         </div>
         <div class="input-row">
           <label for="materialsInput">Raw Materials Cost ($ before markup)</label>
@@ -360,40 +387,40 @@
           <input type="checkbox" id="diagCreditCheck" />
           <span>Credit $<input type="number" id="diagAmountInput" class="diag-inline-input" inputmode="decimal" value="125" min="0" step="5" onclick="event.stopPropagation()" /> Diagnostic Fee toward deposit</span>
         </label>
-        <button class="primary-btn" onclick="calculateQuote(true)">Calculate Quote</button>
+        <button class="primary-btn" id="calcBtn" onclick="calculateQuote(true)">Calculate T&amp;M Estimate</button>
       </div>
 
-      <!-- STEP 3: AUDIT & SINGLE QUOTE OUTPUT -->
+      <!-- RESULTS: ADDITIVE AUDIT & CLIENT JOIST SUMMARY -->
       <div id="resultsSection" class="hidden">
         <div class="card">
-          <span class="step-label" style="margin-bottom: 10px;">Step 3 — Line-by-Line Math Verification</span>
+          <span class="step-label" style="margin-bottom: 10px;">Internal Math Verification</span>
           <table class="audit-table">
             <tr>
               <td>Raw Materials</td>
               <td id="audRawMat">$0.00</td>
             </tr>
-            <tr>
-              <td id="audMatMarkupLabel">Auto Material Markup</td>
-              <td id="audMarkedMat">$0.00</td>
+            <tr class="addon-row">
+              <td id="audMatMarkupLabel">+ 18% Material Markup</td>
+              <td id="audMatMarkupAmt">+$0.00</td>
             </tr>
             <tr>
-              <td id="audLaborLabel">Base Labor (0 man-hrs × $85/hr)</td>
+              <td id="audLaborLabel">Base Labor (0 man-hrs × $85.00/hr)</td>
               <td id="audLabor">$0.00</td>
             </tr>
-            <tr>
-              <td id="audRiskLabel">Labor Risk Buffer</td>
-              <td id="audRiskLabor">$0.00</td>
+            <tr id="audRiskRow" class="addon-row hidden">
+              <td id="audRiskLabel">+ 5% Fixed-Price Complexity Buffer</td>
+              <td id="audRiskMarkupAmt">+$0.00</td>
             </tr>
             <tr>
               <td>Subcontractors</td>
               <td id="audSubs">$0.00</td>
             </tr>
-            <tr id="minFloorRow" class="hidden">
-              <td>Minimum Service Call Floor Applied</td>
-              <td>$650.00</td>
+            <tr id="minFloorRow" class="addon-row hidden">
+              <td>+ Minimum Service Call Adjustment</td>
+              <td id="audMinFloorAmt">+$0.00</td>
             </tr>
-            <tr>
-              <td><strong>Estimate Subtotal (Pre-HST)</strong></td>
+            <tr class="subtotal-row">
+              <td id="audSubtotalLabel">Estimate Subtotal (Pre-HST)</td>
               <td id="audPreTax">$0.00</td>
             </tr>
             <tr>
@@ -401,7 +428,7 @@
               <td id="audHst">$0.00</td>
             </tr>
             <tr class="total-row">
-              <td>Total Client Estimate (Inc. HST)</td>
+              <td id="audTotalLabel">Total Client Estimate (Inc. HST)</td>
               <td id="audTotalHst">$0.00</td>
             </tr>
           </table>
@@ -413,7 +440,7 @@
         </div>
 
         <div class="card">
-          <span class="step-label" style="margin-bottom: 10px;">Client-Ready Joist Summary &amp; Draw Schedule</span>
+          <span class="step-label" id="joistCardLabel" style="margin-bottom: 10px;">Client-Ready Joist Summary (T&amp;M)</span>
           <div id="joistOutput" class="joist-box"></div>
           <button class="secondary-btn" id="copyBtn" onclick="copyJoistText()">Copy Summary for Joist</button>
         </div>
@@ -438,8 +465,9 @@
   </div>
 
   <script>
-    const ACCESS_PIN = "7777";
-    const HISTORY_KEY = "dvc_quote_history_v1";
+    const ACCESS_PIN = "2468";
+    const HISTORY_KEY = "dvc_quote_history_v2";
+    let billingMode = "tm";
     let riskTier = "standard";
 
     if (localStorage.getItem("dvc_unlocked") === ACCESS_PIN) {
@@ -464,20 +492,40 @@
       if (e.key === "Enter") unlockApp();
     });
 
+    function selectBillingMode(mode) {
+      billingMode = mode;
+      const isFixed = mode === "fixed";
+      document.getElementById("modeTM").classList.toggle("active", !isFixed);
+      document.getElementById("modeFixed").classList.toggle("active", isFixed);
+      document.getElementById("complexityCard").classList.toggle("hidden", !isFixed);
+
+      document.getElementById("inputsStepLabel").textContent = isFixed
+        ? "Step 3 — Fixed-Price Inputs (CAD)"
+        : "Step 2 — T&M Inputs (CAD)";
+      document.getElementById("calcBtn").textContent = isFixed
+        ? "Calculate Fixed-Price Quote"
+        : "Calculate T&M Estimate";
+      document.getElementById("jobScopeInput").placeholder = isFixed
+        ? "e.g., New 12×16 Pressure-Treated Rear Deck Build"
+        : "e.g., Rear Deck Ledger & Rim Joist Remediation";
+    }
+
     function selectRisk(tier) {
       riskTier = tier;
       document.getElementById("riskStandard").classList.toggle("active", tier === "standard");
       document.getElementById("riskTwoStory").classList.toggle("active", tier === "two_story");
-      document.getElementById("riskRot").classList.toggle("active", tier === "suspected_rot");
+      document.getElementById("riskComplex").classList.toggle("active", tier === "complex");
     }
 
     function resetForm() {
       document.getElementById("jobScopeInput").value = "";
+      document.getElementById("durationInput").value = "";
       document.getElementById("materialsInput").value = "";
       document.getElementById("hoursInput").value = "";
       document.getElementById("subsInput").value = "";
       document.getElementById("diagCreditCheck").checked = false;
       document.getElementById("diagAmountInput").value = "125";
+      selectBillingMode("tm");
       selectRisk("standard");
       document.getElementById("resultsSection").classList.add("hidden");
     }
@@ -492,58 +540,73 @@
       const subs = parseFloat(document.getElementById("subsInput").value) || 0;
       const creditDiag = document.getElementById("diagCreditCheck").checked;
       const diagFeeVal = parseFloat(document.getElementById("diagAmountInput").value) || 0;
-      const scopeLabel = document.getElementById("jobScopeInput").value.trim() || "Exterior Structural Carpentry & Rot Remediation";
+      const durationText = document.getElementById("durationInput").value.trim();
+      const defaultScope = billingMode === "fixed"
+        ? "Exterior Carpentry & Construction Project (Fixed Price)"
+        : "Exterior Structural Carpentry & Rot Remediation (T&M)";
+      const scopeLabel = document.getElementById("jobScopeInput").value.trim() || defaultScope;
 
-      // 1. Auto-scaled Material Markup
+      // 1. Auto-scaled Material Markup (20% <$1.5k | 18% $1.5k-$3.9k | 15% $4k+)
       let matMarkupRate = 0.20;
       if (rawMat >= 4000) matMarkupRate = 0.15;
       else if (rawMat >= 1500) matMarkupRate = 0.18;
-      const markedMat = rawMat * (1 + matMarkupRate);
+      const matMarkupDollars = rawMat * matMarkupRate;
+      const markedMat = rawMat + matMarkupDollars;
 
-      // 2. Direct $85/man-hr Labor + Labor-Only Risk Contingency
+      // 2. Labor Calculation: Flat $85/hr for T&M; Complexity Buffer applied ONLY for Fixed Price
       const baseRate = 85.0;
       const baseLabor = hours * baseRate;
 
       const riskConfig = {
-        standard: { label: "Standard Access (+5% Labor)", rate: 0.05 },
-        two_story: { label: "2-Story / Tight (+15% Labor)", rate: 0.15 },
-        suspected_rot: { label: "Active / Suspected Rot (+20% Labor)", rate: 0.20 }
+        standard: { label: "+ 5% Standard Access Buffer", rate: 0.05 },
+        two_story: { label: "+ 15% 2-Story / Tight Access Buffer", rate: 0.15 },
+        complex: { label: "+ 20% Heavy / Steep Complexity Buffer", rate: 0.20 }
       };
       const risk = riskConfig[riskTier];
-      const riskAdjustedLabor = baseLabor * (1 + risk.rate);
-      const effectiveLaborRate = hours > 0 ? riskAdjustedLabor / hours : baseRate;
+      const riskLaborDollars = billingMode === "fixed" ? (baseLabor * risk.rate) : 0.0;
+      const totalLabor = baseLabor + riskLaborDollars;
+      const effectiveLaborRate = hours > 0 ? totalLabor / hours : baseRate;
 
       // 3. Pre-HST Total (with $650 minimum service floor)
-      const rawSubtotal = markedMat + riskAdjustedLabor + subs;
+      const rawSubtotal = markedMat + totalLabor + subs;
       const minFloorApplied = rawSubtotal > 0 && rawSubtotal < 650;
-      const preTaxTotal = rawSubtotal > 0 ? Math.max(650, rawSubtotal) : 0;
+      const minFloorTopUp = minFloorApplied ? (650 - rawSubtotal) : 0;
+      const preTaxTotal = rawSubtotal + minFloorTopUp;
 
-      // 4. NB 15% HST & 50/30/20 Draws
+      // 4. NB 15% HST & Deposit Terms
       const hst = preTaxTotal * 0.15;
       const totalWithHst = preTaxTotal + hst;
-
       const diagCredit = creditDiag ? diagFeeVal : 0.0;
-      const draw50 = Math.max(0, (totalWithHst * 0.50) - diagCredit);
-      const draw30 = totalWithHst * 0.30;
-      const draw20 = totalWithHst * 0.20;
 
-      // 5. Fixed Gross Margin Math (Pre-HST Revenue minus Out-of-Pocket Materials & Subs)
+      // 5. Gross Margin (Pre-HST Revenue minus Out-of-Pocket Materials & Subs)
       const outOfPocketCosts = rawMat + subs;
       const grossProfit = preTaxTotal - outOfPocketCosts;
       const grossMarginPct = preTaxTotal > 0 ? (grossProfit / preTaxTotal) * 100 : 0;
 
-      // Update Audit Table
+      // Populate Internal Additive Audit Table
       document.getElementById("audRawMat").textContent = fmt(rawMat);
-      document.getElementById("audMatMarkupLabel").textContent = `Materials + ${Math.round(matMarkupRate * 100)}% Auto-Markup`;
-      document.getElementById("audMarkedMat").textContent = fmt(markedMat);
-      document.getElementById("audLaborLabel").textContent = `Base Labor (${hours} man-hrs × $85/hr)`;
+      document.getElementById("audMatMarkupLabel").textContent = `+ ${Math.round(matMarkupRate * 100)}% Material Markup`;
+      document.getElementById("audMatMarkupAmt").textContent = "+" + fmt(matMarkupDollars);
+      document.getElementById("audLaborLabel").textContent = `Base Labor (${hours} man-hrs × $85.00/hr)`;
       document.getElementById("audLabor").textContent = fmt(baseLabor);
+
+      const riskRow = document.getElementById("audRiskRow");
+      riskRow.classList.toggle("hidden", billingMode !== "fixed");
       document.getElementById("audRiskLabel").textContent = risk.label;
-      document.getElementById("audRiskLabor").textContent = fmt(riskAdjustedLabor);
+      document.getElementById("audRiskMarkupAmt").textContent = "+" + fmt(riskLaborDollars);
+
       document.getElementById("audSubs").textContent = fmt(subs);
       document.getElementById("minFloorRow").classList.toggle("hidden", !minFloorApplied);
+      document.getElementById("audMinFloorAmt").textContent = "+" + fmt(minFloorTopUp);
+
+      document.getElementById("audSubtotalLabel").textContent = billingMode === "fixed"
+        ? "Fixed Quote Subtotal (Pre-HST)"
+        : "T&M Estimate Subtotal (Pre-HST)";
       document.getElementById("audPreTax").textContent = fmt(preTaxTotal);
       document.getElementById("audHst").textContent = fmt(hst);
+      document.getElementById("audTotalLabel").textContent = billingMode === "fixed"
+        ? "Total Fixed Quote (Inc. HST)"
+        : "Total Estimated T&M (Inc. HST)";
       document.getElementById("audTotalHst").textContent = fmt(totalWithHst);
 
       // Update Badges
@@ -552,25 +615,62 @@
       cashBadge.className = "badge " + (grossMarginPct >= 40 ? "badge-ok" : "badge-warn");
 
       const rateBadge = document.getElementById("rateBadge");
-      rateBadge.textContent = `Billed Labor: ${fmt(effectiveLaborRate)}/hr`;
+      rateBadge.textContent = billingMode === "fixed"
+        ? `Effective Labor: ${fmt(effectiveLaborRate)}/hr`
+        : `T&M Rate: $85.00/hr Flat`;
       rateBadge.className = "badge badge-ok";
 
       const creditNote = creditDiag && diagCredit > 0 ? ` (includes -${fmt(diagCredit)} Diagnostic Credit)` : ``;
+      const durationLine = durationText ? `Estimated Timeline: ${durationText}\n` : ``;
+      let joistText = "";
 
-      const joistText =
+      if (billingMode === "tm") {
+        // T&M CLIENT OUTPUT: Itemized Materials Package + $85/hr Labor, Material Deposit + Weekly T&M Billing
+        const subsLine = subs > 0 ? `• Specialty Subcontractors: ${fmt(subs)}\n` : ``;
+        const minLine = minFloorApplied ? `• Minimum Service Call Adjustment: ${fmt(minFloorTopUp)}\n` : ``;
+        const tmDepositRaw = (markedMat + (totalLabor * 0.25) + subs) * 1.15;
+        const tmDeposit = Math.max(0, tmDepositRaw - diagCredit);
+
+        document.getElementById("joistCardLabel").textContent = "Client-Ready Joist Summary (Time & Materials)";
+        joistText =
 `${scopeLabel}
-----------------------------------------
-Estimate Subtotal (Pre-HST): ${fmt(preTaxTotal)}
+${durationLine}----------------------------------------
+Time & Materials (T&M) Breakdown:
+• Materials, Fasteners & Moisture-Barrier Package: ${fmt(markedMat)}
+• Structural Carpentry Labor (Est. ${hours} hrs @ $85.00/hr): ${fmt(totalLabor)}
+${subsLine}${minLine}
+Estimated Subtotal (Pre-HST): ${fmt(preTaxTotal)}
 NB HST (15%): ${fmt(hst)}
-Total Estimate (Inc. HST): ${fmt(totalWithHst)}
+Total Estimated Investment (Inc. HST): ${fmt(totalWithHst)}
+
+T&M Billing & Deposit Terms:
+• Material & Scheduling Deposit: ${fmt(tmDeposit)}${creditNote}
+• Progress / Final Billing: Billed weekly (Fridays) or upon completion based on actual hours worked at $85.00/hr plus materials used (receipts provided upon request).
+
+No-Surprise Stop-Work Guarantee:
+If concealed structural rot extends beyond the estimated hours/materials above, work pauses immediately for photo review and your written/text approval before exceeding this estimate.`;
+      } else {
+        // FIXED-PRICE CLIENT OUTPUT: Clean Lump-Sum Quote (hides internal complexity buffer) + 50/30/20 Draws
+        const draw50 = Math.max(0, (totalWithHst * 0.50) - diagCredit);
+        const draw30 = totalWithHst * 0.30;
+        const draw20 = totalWithHst * 0.20;
+
+        document.getElementById("joistCardLabel").textContent = "Client-Ready Joist Summary (Fixed Price)";
+        joistText =
+`${scopeLabel}
+${durationLine}----------------------------------------
+Fixed Project Price (Pre-HST): ${fmt(preTaxTotal)}
+NB HST (15%): ${fmt(hst)}
+Total Project Investment (Inc. HST): ${fmt(totalWithHst)}
 
 Payment Schedule (50 / 30 / 20):
 • 50% Material & Scheduling Deposit: ${fmt(draw50)}${creditNote}
 • 30% Mid-Project Progress Draw: ${fmt(draw30)}
 • 20% Final Walkthrough Completion: ${fmt(draw20)}
 
-No-Surprise Stop-Work Guarantee:
-We never run an open-ended bill. If concealed structural rot is uncovered after tear-out, work pauses immediately for photo review and your written approval ($85/hr + materials + 18%) before proceeding.`;
+Scope & Change-Order Guarantee:
+Includes all materials, fasteners, labor, and site cleanup for the defined scope above. Any unforeseen structural framing rot or client-requested additions outside this scope will be quoted and approved in writing before proceeding.`;
+      }
 
       document.getElementById("joistOutput").textContent = joistText;
       document.getElementById("resultsSection").classList.remove("hidden");
@@ -578,7 +678,9 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
 
       if (saveToHistory && preTaxTotal > 0) {
         saveQuoteHistory({
+          billingMode,
           label: scopeLabel,
+          durationText,
           rawMat,
           hours,
           subs,
@@ -609,10 +711,10 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
       card.classList.remove("hidden");
       list.innerHTML = "";
       history.forEach((item, idx) => {
-        const displayTotal = item.totalWithHst !== undefined ? item.totalWithHst : (item.totalOptionA || 0);
+        const tag = item.billingMode === "fixed" ? "FIXED" : "T&M";
         const div = document.createElement("div");
         div.className = "history-item";
-        div.innerHTML = `<div><strong>${item.label}</strong><br><small style="color:#4b5563;">Mat: ${fmt(item.rawMat)} | ${item.hours} hrs</small></div><span>${fmt(displayTotal)}</span>`;
+        div.innerHTML = `<div><strong>[${tag}] ${item.label}</strong><br><small style="color:#4b5563;">Mat: ${fmt(item.rawMat)} | ${item.hours} hrs</small></div><span>${fmt(item.totalWithHst)}</span>`;
         div.onclick = () => loadQuote(idx);
         list.appendChild(div);
       });
@@ -622,13 +724,15 @@ We never run an open-ended bill. If concealed structural rot is uncovered after 
       const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
       const item = history[idx];
       if (!item) return;
+      selectBillingMode(item.billingMode || "tm");
       document.getElementById("jobScopeInput").value = item.label;
+      document.getElementById("durationInput").value = item.durationText || "";
       document.getElementById("materialsInput").value = item.rawMat;
       document.getElementById("hoursInput").value = item.hours;
       document.getElementById("subsInput").value = item.subs;
       document.getElementById("diagCreditCheck").checked = item.creditDiag;
       document.getElementById("diagAmountInput").value = item.diagFeeVal !== undefined ? item.diagFeeVal : 125;
-      selectRisk(item.riskTier);
+      selectRisk(item.riskTier || "standard");
       calculateQuote(false);
     }
 
